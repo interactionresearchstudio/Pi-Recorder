@@ -2,6 +2,8 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
+    record = new float[512];
+    
 #ifdef      PI_VERSION
     gpio18.setup("18");
     gpio18.export_gpio();
@@ -49,16 +51,16 @@ void ofApp::setup(){
     
     soundStream.printDeviceList();
 
-	soundStream.setDeviceID(2);
+//	soundStream.setDeviceID(2);
 	
 	//if you want to set the device id to be different than the default
 	//soundStream.setDeviceID(1); 	//note some devices are input only and some are output only 
 
-	soundStream.setup(this, 2, 1, sampleRate, bufferSize, 4);
+	soundStream.setup(this, 2, 2, sampleRate, bufferSize, 4);
 
 	// on OSX: if you want to use ofSoundPlayer together with ofSoundStream you need to synchronize buffersizes.
 	// use ofFmodSetBuffersize(bufferSize) to set the buffersize in fmodx prior to loading a file.
-	soundStream.start();
+	//soundStream.start();
 
 }
 
@@ -106,6 +108,7 @@ void ofApp::update(){
 			isRecording = false;
 			answers[0].stopRecording();
             answers[0].saveToWav();
+            processAnswer();
             currentQuestion++;
 #ifdef      PI_VERSION
             gpio18.setval_gpio("0");
@@ -151,7 +154,7 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels){
 void ofApp::audioIn(float * input, int bufferSize, int nChannels){
 	if(isRecording && loaded){
   		for (int i = 0; i < bufferSize; i++){
-            audioInput[i] = input[i];
+            audioInput[i] = input[i*2];
 		}
 		answers[0].passData(audioInput, bufferSize);
 	}
@@ -251,5 +254,44 @@ void ofApp::getJSONConfig(){
    voiceModulation =  result["voiceModulation"].asDouble();
    randomQuestionOrder = result["randomQuestionOrder"].asInt();
     cout << recordLength << endl;
+    
+}
+
+void ofApp::processAnswer(){
+    ofSleepMillis(100);
+    ofxMaxiSample samp;
+    maxiTimePitchStretch<grainPlayerWin , maxiSample> *ps;
+    maxiRecorder finalRecord;
+    
+#ifdef      PI_VERSION
+              samp.load(ofToDataPath(ofFilePath::getUserHomeDir() + "/../boot/recordings/"+ofToString(currentQuestion)+".wav"));
+#else
+              samp.load(ofToDataPath(ofFilePath::getUserHomeDir() + "/Desktop/recordings/"+ofToString(currentQuestion)+".wav"));
+#endif
+#ifdef      PI_VERSION
+    finalRecord.setup(ofToDataPath(ofFilePath::getUserHomeDir() + "/../boot/recordings/warp"+ofToString(currentQuestion)+".wav"));
+#else 
+    finalRecord.setup(ofToDataPath(ofFilePath::getUserHomeDir() + "/Desktop/recordings/warp"+ofToString(currentQuestion)+".wav"));
+#endif
+    
+    ps = new maxiTimePitchStretch<grainPlayerWin, maxiSample>(&samp);
+    double sampLength = samp.getLength();
+    double wave;
+    finalRecord.startRecording();
+    
+    while(ps->hasEnded() == false){
+        for(int i = 0 ; i< 512; i ++){
+            record[i] = ps->playOnce(0.85, 0.99, 0.25, (int)3)*10.0;
+        }
+        finalRecord.passData(record, 512);
+    }
+    
+    finalRecord.stopRecording();
+    finalRecord.saveToWav();
+    
+    
+
+    
+
     
 }

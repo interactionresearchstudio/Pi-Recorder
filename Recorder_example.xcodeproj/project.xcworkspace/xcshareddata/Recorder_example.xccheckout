@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>8AFE1590-479D-4760-AC27-B81AB285EE2F</string>
+	<key>IDESourceControlProjectName</key>
+	<string>Recorder_example</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>6B1F5847D270D4772CC1446C4A3CE6D3D6FD8D14</key>
+		<string>https://github.com/kashimAstro/ofxGPIO.git</string>
+		<key>B055B6EE196801523634B2D3F2D3096677C31AEC</key>
+		<string>https://github.com/interactionresearchstudio/Pi-Recorder.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>Recorder_example.xcodeproj</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>6B1F5847D270D4772CC1446C4A3CE6D3D6FD8D14</key>
+		<string>../../../addons/ofxGPIO</string>
+		<key>B055B6EE196801523634B2D3F2D3096677C31AEC</key>
+		<string>../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>https://github.com/interactionresearchstudio/Pi-Recorder.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>B055B6EE196801523634B2D3F2D3096677C31AEC</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>6B1F5847D270D4772CC1446C4A3CE6D3D6FD8D14</string>
+			<key>IDESourceControlWCCName</key>
+			<string>ofxGPIO</string>
+		</dict>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>B055B6EE196801523634B2D3F2D3096677C31AEC</string>
+			<key>IDESourceControlWCCName</key>
+			<string>Recorder_example</string>
+		</dict>
+	</array>
+</dict>
+</plist>

@@ -1,13 +1,16 @@
 #pragma once
 
-#define PI_VERSION
+//#define PI_VERSION
 
 #include "ofMain.h"
 #include "ofxMaxim.h"
 #include "ofxJSON.h"
+#include "maxiGrains.h"
 #ifdef      PI_VERSION
 #include "ofxGPIO.h"
 #endif
+
+typedef hannWinFunctor grainPlayerWin;
 
 class ofApp : public ofBaseApp{
 	
@@ -28,6 +31,7 @@ class ofApp : public ofBaseApp{
 		void windowResized(int w, int h);
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
+        void processAnswer();
 
 		void exit();
     
@@ -79,6 +83,9 @@ class ofApp : public ofBaseApp{
         bool loaded;
         int currentQuestion;
         int numOfQuestions;
+    
+    //processing
+        float* record;
 
 		
 };
