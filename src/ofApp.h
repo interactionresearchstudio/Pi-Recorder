@@ -1,6 +1,6 @@
 #pragma once
 
-//#define PI_VERSION
+#define PI_VERSION
 
 #include "ofMain.h"
 #include "ofxMaxim.h"

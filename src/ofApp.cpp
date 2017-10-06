@@ -16,7 +16,7 @@ void ofApp::setup(){
 	isPlaying = false;
 	isRecording = false;
 	buttonFlag = false;
-  newAnswer = false;
+    newAnswer = false;
     state_button = "";
 
     currentQuestion = 0;
@@ -30,7 +30,7 @@ void ofApp::setup(){
     ofxMaxiSettings::setup(sampleRate, 2, bufferSize);
     audioInput = new float[bufferSize];
 #ifdef      PI_VERSION
-   	questionDir.listDir(ofFilePath::getUserHomeDir() + "/../boot/questions/");
+   	questionDir.listDir(ofFilePath::getUserHomeDir() + "/../home/pi/questions/");
 #else
 	questionDir.listDir(ofFilePath::getUserHomeDir() + "/Desktop/questions/");
 #endif
@@ -54,9 +54,9 @@ void ofApp::setup(){
 //	soundStream.setDeviceID(2);
 	
 	//if you want to set the device id to be different than the default
-	//soundStream.setDeviceID(1); 	//note some devices are input only and some are output only 
+	soundStream.setDeviceID(2); 	//note some devices are input only and some are output only 
 
-	soundStream.setup(this, 2, 2, sampleRate, bufferSize, 4);
+	soundStream.setup(this, 2, 1, sampleRate, bufferSize, 4);
 
 	// on OSX: if you want to use ofSoundPlayer together with ofSoundStream you need to synchronize buffersizes.
 	// use ofFmodSetBuffersize(bufferSize) to set the buffersize in fmodx prior to loading a file.
@@ -87,16 +87,19 @@ void ofApp::update(){
         loaded = false;
         newAnswer = true;
         //answers.erase( answers.begin() );
+        if(answers.size() > 0){
         answers.clear();
+        }
         answers.resize(answers.size()+1);
-        loaded = true;
+        
        // cout << "START RECORD" << endl;
 #ifdef      PI_VERSION
-    answers[0].setup(ofToDataPath(ofFilePath::getUserHomeDir() + "/../boot/recordings/"+ofToString(currentQuestion)+".wav"));
+    answers[0].setup(ofToDataPath(ofFilePath::getUserHomeDir() + "/../home/pi/recordings/"+ofToString(currentQuestion)+".wav"));
 #else
     answers[0].setup(ofToDataPath(ofFilePath::getUserHomeDir() + "/Desktop/recordings/"+ofToString(currentQuestion)+".wav"));
 #endif
     answers[0].startRecording();
+    loaded = true;
 #ifdef      PI_VERSION
         gpio18.setval_gpio("1");
 #endif
@@ -154,7 +157,7 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels){
 void ofApp::audioIn(float * input, int bufferSize, int nChannels){
 	if(isRecording && loaded){
   		for (int i = 0; i < bufferSize; i++){
-            audioInput[i] = input[i*2];
+            audioInput[i] = input[i];
 		}
 		answers[0].passData(audioInput, bufferSize);
 	}
@@ -234,7 +237,7 @@ void ofApp::exit(){
 void ofApp::getJSONConfig(){
     // Now parse the JSON
 #ifdef PI_VERSION
-   string file = ofFilePath::getUserHomeDir() + "/../boot/config/conf.json";
+   string file = ofFilePath::getUserHomeDir() + "/../home/pi/config/conf.json";
 #else   
  string file = ofFilePath::getUserHomeDir() + "/Desktop/config/conf.JSON";
 #endif
@@ -264,12 +267,12 @@ void ofApp::processAnswer(){
     maxiRecorder finalRecord;
     
 #ifdef      PI_VERSION
-              samp.load(ofToDataPath(ofFilePath::getUserHomeDir() + "/../boot/recordings/"+ofToString(currentQuestion)+".wav"));
+              samp.load(ofToDataPath(ofFilePath::getUserHomeDir() + "/../home/pi/recordings/"+ofToString(currentQuestion)+".wav"));
 #else
               samp.load(ofToDataPath(ofFilePath::getUserHomeDir() + "/Desktop/recordings/"+ofToString(currentQuestion)+".wav"));
 #endif
 #ifdef      PI_VERSION
-    finalRecord.setup(ofToDataPath(ofFilePath::getUserHomeDir() + "/../boot/recordings/warp"+ofToString(currentQuestion)+".wav"));
+    finalRecord.setup(ofToDataPath(ofFilePath::getUserHomeDir() + "/../home/pi/recordings/warp"+ofToString(currentQuestion)+".wav"));
 #else 
     finalRecord.setup(ofToDataPath(ofFilePath::getUserHomeDir() + "/Desktop/recordings/warp"+ofToString(currentQuestion)+".wav"));
 #endif
