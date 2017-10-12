@@ -44,7 +44,7 @@ class ofApp : public ofBaseApp{
 		ofDirectory questionDir, configDir;
         vector<maxiSample> questions;
         vector<maxiRecorder>answers;
-    
+        //maxiRecorder monoAnswer;
 		ofSoundStream soundStream;
 
         //Audio stuff
@@ -53,6 +53,7 @@ class ofApp : public ofBaseApp{
         int		bufferSize;
 
         float* audioInput;
+        float* recordNormalised;
     
         //Config file settings
         ofxJSONElement result;

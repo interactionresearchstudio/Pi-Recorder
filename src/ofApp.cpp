@@ -2,6 +2,7 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
+   // record = new float[1024];
     record = new float[512];
     
 #ifdef      PI_VERSION
@@ -28,9 +29,11 @@ void ofApp::setup(){
     bufferSize	= 512; /* Buffer Size. you have to fill this buffer with sound using the for loop in the audioOut method */
 
     ofxMaxiSettings::setup(sampleRate, 2, bufferSize);
-    audioInput = new float[bufferSize];
+   // audioInput = new float[bufferSize*2];
+     audioInput = new float[bufferSize];
+     recordNormalised = new float[bufferSize];
 #ifdef      PI_VERSION
-   	questionDir.listDir(ofFilePath::getUserHomeDir() + "/../home/pi/questions/");
+   	questionDir.listDir("/home/pi/questions/");
 #else
 	questionDir.listDir(ofFilePath::getUserHomeDir() + "/Desktop/questions/");
 #endif
@@ -44,6 +47,7 @@ void ofApp::setup(){
 	// you can now iterate through the files and load them into the ofImage vector
 	for(int i = 0; i < numOfQuestions; i++){
 		questions[i].load(questionDir.getPath(i));
+        questions[i].normalise(0.99);
 	}
 	
 
@@ -94,11 +98,15 @@ void ofApp::update(){
         
        // cout << "START RECORD" << endl;
 #ifdef      PI_VERSION
-    answers[0].setup(ofToDataPath(ofFilePath::getUserHomeDir() + "/../home/pi/recordings/"+ofToString(currentQuestion)+".wav"));
+    answers[0].setup(ofToDataPath("/home/pi/recordings/"+ofToString(currentQuestion)+".wav"));
+  //  monoAnswer.setup(ofToDataPath("/home/pi/recordings/"+"mono"+ofToString(currentQuestion)+".wav"));
 #else
     answers[0].setup(ofToDataPath(ofFilePath::getUserHomeDir() + "/Desktop/recordings/"+ofToString(currentQuestion)+".wav"));
+   // monoAnswer.setup(ofToDataPath(ofFilePath::getUserHomeDir() + "/Desktop/recordings/"+"mono"+ofToString(currentQuestion)+".wav"));
+
 #endif
     answers[0].startRecording();
+   // monoAnswer.startRecording();
     loaded = true;
 #ifdef      PI_VERSION
         gpio18.setval_gpio("1");
@@ -108,9 +116,14 @@ void ofApp::update(){
 
 		if(elapsedTime >= recordLength*1000){
            // cout << "END RECORD" << endl;
+
 			isRecording = false;
 			answers[0].stopRecording();
             answers[0].saveToWav();
+
+           // monoAnswer.stopRecording();
+           // monoAnswer.saveToWav();
+
             processAnswer();
             currentQuestion++;
 #ifdef      PI_VERSION
@@ -157,9 +170,14 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels){
 void ofApp::audioIn(float * input, int bufferSize, int nChannels){
 	if(isRecording && loaded){
   		for (int i = 0; i < bufferSize; i++){
-            audioInput[i] = input[i];
+            audioInput[i]=input[i];
+            //audioInput[i*2] = input[i];
+	        //audioInput[i*2+1]=input[i];	
+            //audioMono[i];	
 		}
-		answers[0].passData(audioInput, bufferSize);
+		//answers[0].passData(audioInput, bufferSize*2);
+          answers[0].passData(audioInput, bufferSize);
+       // monoAnswer.passData(audioMono,bufferSize);
 	}
 }
 
@@ -237,7 +255,7 @@ void ofApp::exit(){
 void ofApp::getJSONConfig(){
     // Now parse the JSON
 #ifdef PI_VERSION
-   string file = ofFilePath::getUserHomeDir() + "/../home/pi/config/conf.json";
+   string file = "/home/pi/config/conf.json";
 #else   
  string file = ofFilePath::getUserHomeDir() + "/Desktop/config/conf.JSON";
 #endif
@@ -264,33 +282,70 @@ void ofApp::processAnswer(){
     ofSleepMillis(100);
     ofxMaxiSample samp;
     maxiTimePitchStretch<grainPlayerWin , maxiSample> *ps;
-    maxiRecorder finalRecord;
+    maxiRecorder finalRecord,normalisedRecord;
     
 #ifdef      PI_VERSION
-              samp.load(ofToDataPath(ofFilePath::getUserHomeDir() + "/../home/pi/recordings/"+ofToString(currentQuestion)+".wav"));
+      //        samp.load(ofToDataPath("/home/pi/recordings/mono"+ofToString(currentQuestion)+".wav"));
+                samp.load(ofToDataPath("/home/pi/recordings/"+ofToString(currentQuestion)+".wav"));
+
 #else
               samp.load(ofToDataPath(ofFilePath::getUserHomeDir() + "/Desktop/recordings/"+ofToString(currentQuestion)+".wav"));
+      //        samp.load(ofToDataPath(ofFilePath::getUserHomeDir() + "/Desktop/recordings/mono"+ofToString(currentQuestion)+".wav"));
 #endif
 #ifdef      PI_VERSION
-    finalRecord.setup(ofToDataPath(ofFilePath::getUserHomeDir() + "/../home/pi/recordings/warp"+ofToString(currentQuestion)+".wav"));
+    finalRecord.setup(ofToDataPath("/home/pi/recordings/warp"+ofToString(currentQuestion)+".wav"));
+    normalisedRecord.setup(ofToDataPath("/home/pi/recordings/"+ofToString(currentQuestion)+".wav"));
 #else 
     finalRecord.setup(ofToDataPath(ofFilePath::getUserHomeDir() + "/Desktop/recordings/warp"+ofToString(currentQuestion)+".wav"));
+    normalisedRecord.setup(ofToDataPath(ofFilePath::getUserHomeDir() + "/Desktop/recordings/"+ofToString(currentQuestion)+".wav"));
+
 #endif
-    
+
+
+    double lengthNorm = samp.getLength();
+    //cout << lengthNorm << endl;
+    samp.normalise(1.0);
+    normalisedRecord.startRecording();
+    float maxVal = 0;
+    while(lengthNorm > 0){
+          for(int i = 0 ; i< 512; i ++){
+            recordNormalised[i] = samp.playOnce();
+            if(recordNormalised[i] > maxVal){
+              maxVal = recordNormalised[i];
+            }
+            lengthNorm--;
+          }
+          normalisedRecord.passData(recordNormalised,512);
+    }
+    cout << maxVal << endl;
+    normalisedRecord.stopRecording();
+    normalisedRecord.saveToWav();
+    samp.setPosition(0);
+
     ps = new maxiTimePitchStretch<grainPlayerWin, maxiSample>(&samp);
     double sampLength = samp.getLength();
     double wave;
     finalRecord.startRecording();
+
     
     while(ps->hasEnded() == false){
         for(int i = 0 ; i< 512; i ++){
-            record[i] = ps->playOnce(0.85, 0.99, 0.25, (int)3)*10.0;
+          //  record[i*2] = ps->playOnce(0.85, 0.99, 0.25, (int)3)*10.0;
+          //  record[i*2+1] = record[i*2];
+             record[i] = ps->playOnce(0.85, 0.99, 0.25, (int)3);
         }
+      //  finalRecord.passData(record, 1024);
         finalRecord.passData(record, 512);
     }
     
     finalRecord.stopRecording();
     finalRecord.saveToWav();
+#ifdef      PI_VERSION
+          //  ofFile::removeFile(ofToDataPath("/home/pi/recordings/"+"mono"+ofToString(currentQuestion)+".wav"));
+#else
+          //  ofFile::removeFile(ofFilePath::getUserHomeDir() + "/Desktop/recordings/"+"mono"+ofToString(currentQuestion)+".wav");
+#endif
+
     
     
 
